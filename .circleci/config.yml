@@ -1,40 +1,34 @@
-version: 2.1
-orbs:
-  node: circleci/node@5.0.2
+version: 2
 
 jobs:
-  build_and_test:
-    executor: node/default
+  build:
+    docker:
+      - image: circleci/node:17.2.0
     steps:
       - checkout
-      - node/install-packages:
-          pkg-manager: npm
-      - run:
-          command: npm test
-          name: Run tests
-      - run:
-          command: npm build
-          name: Build app
-      - persist_to_workspace:
-          root: ~/project
-          paths:
-            - .
-
-  # deploy: # this can be any name you choose
-  #   executor: heroku/default
-  #   steps:
-  #     - attach_workspace:
-  #         at: ~/project
-  #     - heroku/deploy-via-git:
-  #         force: true # force push when pushing to the heroku remote, see: https://devcenter.heroku.com/articles/git
-
+      - run: echo "npm installing"
+      - run: npm install
+      - run: CI=true npm run build
+  test:
+    docker:
+      - image: circleci/node:17.2.0
+    steps:
+      - checkout
+      - run: echo "testing stuff"
+      - run: npm install
+      - run: npm test
+  hithere:
+    docker:
+      - image: circleci/node:17.2.0
+    steps:
+      - checkout
+      - run: echo "hellooooo"
 workflows:
-  test_my_app:
+  version: 2
+  build_test_and_lint:
     jobs:
-      - build_and_test
-      - deploy:
+      - build
+      - hithere
+      - test:
           requires:
-            - build_and_test # only deploy if the build_and_test job has completed
-          filters:
-            branches:
-              only: main # only deploy when on main
+            - hithere
